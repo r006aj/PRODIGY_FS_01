@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Auth System</title>
+  <style>
+    :root {
+      --bg: #f4f4f4;
+      --text: #000;
+      --card: #fff;
+    }
+    body.dark {
+      --bg: #1e1e1e;
+      --text: #f4f4f4;
+      --card: #2a2a2a;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      background: var(--card);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover { background: #0056b3; }
+    .switch-link {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #007bff;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .hidden { display: none; }
+    .logout-btn { background: #dc3545; }
+    .dark-toggle {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      z-index: 1000;
+      font-size: 14px;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    body.dark .dark-toggle {
+      background: #444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="dark-toggle" onclick="toggleDarkMode()">🌓 Theme</div>
+
+  <div class="container" id="auth-container">
+    <div id="login-form">
+      <h2>Login</h2>
+      <input type="text" id="login-username" placeholder="Username" required>
+      <input type="password" id="login-password" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+      <div class="switch-link" onclick="showRegister()">Don't have an account? Register</div>
+    </div>
+
+    <div id="register-form" class="hidden">
+      <h2>Register</h2>
+      <input type="text" id="register-username" placeholder="Choose username" required>
+      <input type="password" id="register-password" placeholder="Choose password" required>
+      <button onclick="register()">Register</button>
+      <div class="switch-link" onclick="showLogin()">Already have an account? Login</div>
+    </div>
+
+    <div id="welcome-page" class="hidden">
+      <h2>Welcome, <span id="user-name"></span>!</h2>
+      <p>You are successfully logged in.</p>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+    const welcomePage = document.getElementById("welcome-page");
+    const usernameDisplay = document.getElementById("user-name");
+
+    function showRegister() {
+      loginForm.classList.add("hidden");
+      registerForm.classList.remove("hidden");
+    }
+
+    function showLogin() {
+      registerForm.classList.add("hidden");
+      loginForm.classList.remove("hidden");
+    }
+
+    function register() {
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+      if (!username || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem("users")) || {};
+      if (users[username]) {
+        alert("Username already exists.");
+        return;
+      }
+      users[username] = password;
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Registered successfully. Please login.");
+      showLogin();
+    }
+
+    function login() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+      const users = JSON.parse(localStorage.getItem("users")) || {};
+      if (users[username] && users[username] === password) {
+        localStorage.setItem("authenticatedUser", username);
+        showWelcome(username);
+      } else {
+        alert("Invalid username or password.");
+      }
+    }
+
+    function showWelcome(user) {
+      loginForm.classList.add("hidden");
+      registerForm.classList.add("hidden");
+      welcomePage.classList.remove("hidden");
+      usernameDisplay.textContent = user;
+    }
+
+    function logout() {
+      localStorage.removeItem("authenticatedUser");
+      welcomePage.classList.add("hidden");
+      showLogin();
+    }
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    // Load saved theme and auto-login
+    window.onload = () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+      const user = localStorage.getItem("authenticatedUser");
+      if (user) showWelcome(user);
+    };
+  </script>
+</body>
+</html>
